@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Galaktos — audio-reactive feedback visualizer</title>
+<style>
+:root{
+  --bg:#0a0a0f; --panel:#13131b; --panel2:#1a1a25; --line:#2a2a3b; --text:#dcdcea; --dim:#8b8ba3;
+  --acc:#8fd0ff; --acc2:#ffb066; --bad:#ff6b8a; --good:#7dffb0; --panelW:390px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:12px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+#app{display:flex;height:100%;height:100dvh}
+#stage{position:relative;flex:1;min-width:0;min-height:0;background:#000;overflow:hidden}
+#out{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#title{position:absolute;left:10px;top:10px;max-width:70%;padding:4px 9px;border-radius:4px;background:rgba(0,0,0,.5);color:#fff;font-size:13px;pointer-events:none;transition:opacity .6s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#title.hide{opacity:0}
+#toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:6px 12px;border-radius:4px;background:rgba(20,20,28,.94);border:1px solid var(--line);max-width:86%;white-space:pre-wrap;opacity:0;transition:opacity .3s;pointer-events:none;z-index:5}
+#toast.show{opacity:1}
+#toast.err{border-color:var(--bad);color:#ffd0da}
+#fatal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:14px;color:#ffd0da}
+#drop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,20,40,.7);border:3px dashed var(--acc);font-size:16px;color:var(--acc);pointer-events:none;text-align:center;padding:20px}
+body.dragging #drop{display:flex}
+#stageBtns{position:absolute;right:8px;top:8px;display:flex;gap:6px;z-index:4}
+#stageBtns button{background:rgba(20,20,30,.7)}
+body.nopanel #panel{display:none}
+body.nopanel.tabbed #stage{flex:1;height:auto}
+
+#panel{width:var(--panelW);flex:none;display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);min-height:0}
+#tabbar{display:flex;gap:4px;padding:6px;border-bottom:1px solid var(--line);background:var(--panel2);overflow-x:auto;scrollbar-width:none;flex:none}
+#tabbar::-webkit-scrollbar{display:none}
+body:not(.tabbed) #tabbar{flex-wrap:wrap}
+#tabbar button{flex:none;border-radius:999px;padding:4px 11px;color:var(--dim);background:transparent;border:1px solid var(--line);white-space:nowrap}
+#tabbar button.on{color:#0a0a0f;background:var(--acc);border-color:var(--acc)}
+#pages{flex:1;overflow:auto;padding:6px 8px 40px;min-height:0;overscroll-behavior:contain}
+#pages > .page{display:none}
+#pages > .page.tabon{display:block}
+
+button{background:#242437;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:4px 9px;cursor:pointer;font:inherit}
+button:hover{background:#2f2f48}
+button.primary{background:#1f4262;border-color:#2f6290}
+button.danger{border-color:#6a2a3a}
+input,select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:3px;font:inherit}
+input[type=search],input[type=text]{padding:4px 6px}
+select{padding:3px 4px;max-width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--acc);margin:0}
+input.num{width:62px;padding:1px 3px;font-size:11px}
+.dim{color:var(--dim)}
+
+.sec{border:1px solid var(--line);border-radius:5px;margin:6px 0;background:var(--panel2)}
+.sec>summary{cursor:pointer;padding:5px 8px;font-weight:600;user-select:none}
+.sec-body{padding:2px 8px 8px}
+.row{display:grid;grid-template-columns:100px minmax(0,1fr) 62px 24px;gap:6px;align-items:center;min-height:24px}
+.row>label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:default}
+.row.sel{grid-template-columns:100px minmax(0,1fr)}
+.row.bool{grid-template-columns:1fr}
+.cbl{cursor:pointer}
+.rwrap{position:relative;display:flex;align-items:center}
+.rwrap .live{position:absolute;top:50%;width:3px;height:14px;margin-top:-7px;border-radius:2px;background:var(--acc2);pointer-events:none;display:none;box-shadow:0 0 4px var(--acc2)}
+.modbtn{padding:0;width:24px;height:20px;color:var(--dim)}
+.modbtn.on{background:#5a3a16;border-color:#a06a2a;color:#ffd39a}
+.modrow{display:none;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr) 54px 24px;gap:6px;align-items:center;margin:2px 0 6px 20px;padding:4px 6px;border-left:2px solid var(--acc2);background:rgba(255,176,102,.05)}
+.prow.modopen .modrow{display:grid}
+.modlab{color:var(--acc2);font-size:11px}
+.modclear{padding:0;width:24px;height:20px}
+.hint{color:var(--dim);font-size:11px;margin:4px 0 6px}
+.hint.touch{display:none}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;align-items:center}
+.brow{display:flex;gap:6px;align-items:center;margin:4px 0}
+.brow input[type=search]{flex:1;min-width:0}
+.plist{height:220px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:4px}
+.plist div{padding:4px 7px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #15151e}
+.plist div:hover{background:#1c1c2b}
+.plist div.cur{background:#21324a;color:#fff}
+.plist .fav{color:var(--acc2)}
+.plist .pk{color:var(--dim);font-size:10px;margin-left:6px}
+.route{display:grid;grid-template-columns:1fr auto 50px 24px;gap:6px;align-items:center;min-height:24px}
+.route button{padding:0;height:20px}
+.meters{display:grid;grid-template-columns:40px 1fr 40px;gap:4px 6px;align-items:center;margin:4px 0}
+.meter{height:7px;background:var(--bg);border:1px solid var(--line);border-radius:2px;overflow:hidden;margin:1px 0}
+.meter i{display:block;height:100%;background:var(--acc);width:0}
+.meter.att i{background:var(--acc2)}
+.status{color:var(--acc);margin:4px 0}
+.player audio{width:100%;margin-top:4px}
+.foot{color:var(--dim);font-size:11px;padding:10px 0;text-align:center}
+#credit{flex:none;padding:4px 8px;font-size:10px;color:var(--dim);text-align:center;border-top:1px solid var(--line);background:var(--panel2)}
+
+/* ---------- phone layout: docked view, tabs underneath ---------- */
+body.tabbed #app{flex-direction:column}
+body.tabbed #stage{flex:none;height:48dvh}
+body.tabbed #panel{width:auto;flex:1;border-left:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+body.tabbed .plist{height:min(220px,28dvh)}
+body.tabbed.land #app{flex-direction:row}
+body.tabbed.land #stage{flex:1;height:auto}
+body.tabbed.land #panel{width:300px;flex:none;border-top:0;border-left:1px solid var(--line)}
+body.tabbed .row{grid-template-columns:86px minmax(0,1fr) 56px 30px}
+body.tabbed .row.sel{grid-template-columns:86px minmax(0,1fr)}
+body.tabbed .hint.keys{display:none}
+body.tabbed #title{font-size:12px}
+
+@media (pointer:coarse){
+  input[type=range]{height:28px}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+  button,select{min-height:36px}
+  #tabbar button{min-height:34px}
+  input[type=checkbox]{width:19px;height:19px}
+  input.num,input[type=search],input[type=text]{min-height:32px}
+  .modbtn,.modclear,.route button{min-height:30px;height:30px;width:30px}
+  .plist div{padding:8px 7px}
+  .hint.keys{display:none}
+  .hint.touch{display:block}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="out"></canvas>
+    <div id="title" class="hide"></div>
+    <div id="toast"></div>
+    <div id="drop">Drop an audio file to play it, or preset .json files to import</div>
+    <div id="fatal"></div>
+    <div id="stageBtns">
+      <button id="showPanel" title="Show / hide panel (H)">☰</button>
+      <button id="fsBtn" title="Fullscreen">⛶</button>
+    </div>
+  </div>
+  <aside id="panel">
+    <nav id="tabbar"></nav>
+    <div id="pages"></div>
+    <div id="credit">Created with help from Claude AI</div>
+  </aside>
+</div>
+<script type="module" src="main.js?v=2.2.0"></script>
+</body>
+</html>
