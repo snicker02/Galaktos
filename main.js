@@ -11,7 +11,7 @@ import { download } from './ui/widgets.js';
 import { initLayout } from './ui/layout.js';
 import { Recorder } from './engine/recorder.js';
 
-const VERSION = '2.2.0';
+const VERSION = '2.2.1';
 const LS_SETTINGS = 'galaktos.settings';
 const DEFAULT_OUT = Object.freeze({
   speed: 1, fpsCap: 0, resScale: 1, simScale: 1, blend: 2.5, cycle: 0, cycleRandom: true, showTitle: true,
@@ -63,6 +63,7 @@ function boot() {
   const wake = () => { const c = app.audio.ctx; if (c && c.state === 'suspended') c.resume(); };
   window.addEventListener('pointerdown', wake, true);
   window.addEventListener('keydown', wake, true);
+  $('warnClose').onclick = () => { document.body.classList.add('warnhidden'); app.resize(); }; // hidden for this visit only
   $('showPanel').onclick = () => app.togglePanel();
   $('fsBtn').onclick = () => {
     const d = document;
