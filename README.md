@@ -1,4 +1,6 @@
-# Galaktos v2.2.0
+# Galaktos v2.2.1
+
+> **⚠ FLASHING LIGHTS WARNING: Galaktos produces flashing lights, strobing and rapidly changing patterns that may trigger seizures in people with photosensitive epilepsy. Viewer discretion is advised. Stop using it immediately if you feel dizzy, disoriented or unwell.**
 
 Galaktos is an audio-reactive feedback visualizer with its own engine and its own presets. Every parameter is a control, and any control can be driven by the music.
 
@@ -129,6 +131,7 @@ ui/                  panels, widgets, library, responsive layout
 
 ## Changelog
 
+- **2.2.1** – Added a bold flashing-lights (photosensitivity) warning at the top of the app and the README.
 - **2.2.0** – Added 7 generators (curves, spirals, rays, pulse rings, lattice, metaballs, plasma) and a Fractals tab with escape-time sets, a kaleidoscopic IFS and a complex feedback map. 22 new presets. The randomiser and Mutate now use the new generators. The app reports an error if the GPU doesn't allow enough shader uniforms.
 - **2.1.0** – MP4 export is the default: H.264 with AAC or Opus, constant frame rate, choice of fps and bitrate. WebM is still available. Added the credit line.
 - **2.0.0** – New engine and original presets (replaces the Butterchurn-based prototype).
