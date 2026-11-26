@@ -11,7 +11,7 @@ import { download } from './ui/widgets.js';
 import { initLayout } from './ui/layout.js';
 import { Recorder } from './engine/recorder.js';
 
-const VERSION = '2.2.1';
+const VERSION = '2.3.0';
 const LS_SETTINGS = 'galaktos.settings';
 const DEFAULT_OUT = Object.freeze({
   speed: 1, fpsCap: 0, resScale: 1, simScale: 1, blend: 2.5, cycle: 0, cycleRandom: true, showTitle: true,
@@ -329,6 +329,14 @@ app.importFiles = async function (files) {
 app.snapshot = function () {
   $('out').toBlob((b) => { if (b) download(`${safeName(app.preset.name)}.png`, b); }, 'image/png');
 };
+
+// Shared image shelf (snicker02.github.io/shared/bridge.js). The button lives in the Capture panel.
+app.shelf = window.SnickerShelf ? window.SnickerShelf.mount({
+  app: 'Galaktos',
+  button: null,
+  getImage: () => new Promise((res, rej) => $('out').toBlob((b) => (b ? res(b) : rej(new Error('encode failed'))), 'image/png')),
+  getMeta: () => ({ name: `${safeName(app.preset ? app.preset.name : 'galaktos')}.png` }),
+}) : null;
 
 let recorder = null;
 app.toggleRecord = async function () {
