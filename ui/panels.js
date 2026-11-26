@@ -270,7 +270,8 @@ export function buildPanels(app) {
       num('recMbps', 'Quality (Mbps)', 2, 60, 1, 'Video bitrate'),
       selectRow({ label: 'Frame rate', value: o.recFps, options: [[24, '24 fps'], [30, '30 fps'], [60, '60 fps']],
         onChange: (v) => { o.recFps = +v; app.saveSettings(); } }).root,
-      el('div', { class: 'bar' }, button('Snapshot PNG', () => app.snapshot(), '(S)'), recBtn),
+      el('div', { class: 'bar' }, button('Snapshot PNG', () => app.snapshot(), '(S)'), recBtn,
+        button('⇄ Shelf', () => (app.shelf ? app.shelf.toggle() : app.toast('The shelf needs snicker02.github.io (offline?)', true)), 'Shared image shelf: send this frame to another snicker02 app')),
       el('div', { class: 'hint' }, 'MP4 is H.264 at the output resolution (Resolution above), constant frame rate. Sound is recorded for Microphone or Audio file input: AAC where the browser can encode it, otherwise Opus.'),
     );
     pg.append(cap.root);
