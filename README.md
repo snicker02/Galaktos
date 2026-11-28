@@ -136,6 +136,10 @@ ui/                  panels, widgets, library, responsive layout
 - **2.1.0** – MP4 export is the default: H.264 with AAC or Opus, constant frame rate, choice of fps and bitrate. WebM is still available. Added the credit line.
 - **2.0.0** – New engine and original presets (replaces the Butterchurn-based prototype).
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ---
 
 Created with help from Claude AI
