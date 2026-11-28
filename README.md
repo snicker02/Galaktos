@@ -136,6 +136,10 @@ ui/                  panels, widgets, library, responsive layout
 - **2.1.0** – MP4 export is the default: H.264 with AAC or Opus, constant frame rate, choice of fps and bitrate. WebM is still available. Added the credit line.
 - **2.0.0** – New engine and original presets (replaces the Butterchurn-based prototype).
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ---
 
 Created with help from Claude AI
@@ -148,7 +152,3 @@ The **⇄ Shelf** button opens the image shelf shared by all apps on [snicker02.
 - **Send to ↗** opens another app in a new tab with the image already loaded.
 
 The shelf code lives in [`snicker02.github.io/shared/bridge.js`](https://github.com/snicker02/snicker02.github.io/blob/main/shared/bridge.js). If it can't load (for example when you're offline), the app works as before and the button is hidden.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
